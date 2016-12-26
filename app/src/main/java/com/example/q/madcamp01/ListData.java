@@ -22,8 +22,8 @@ public class ListData {
         private final Collator sCollator = Collator.getInstance();
 
         @Override
-        public int compare(ListData mListDate_1, ListData mListDate_2) {
-            return sCollator.compare(mListDate_1.name, mListDate_2.name);
+        public int compare(ListData mListData_1, ListData mListData_2) {
+            return sCollator.compare(mListData_1.name, mListData_2.name);
         }
     };
 }
