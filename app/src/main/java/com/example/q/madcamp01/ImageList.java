@@ -177,7 +177,7 @@ public class ImageList extends Fragment {
             if (convertView == null) {
                 imageView = new ImageView(mContext);
                 imageView.setLayoutParams(new GridView.LayoutParams(300, 300));
-                imageView.setAdjustViewBounds(false);
+                imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setPadding(2, 2, 2, 2);
             } else {

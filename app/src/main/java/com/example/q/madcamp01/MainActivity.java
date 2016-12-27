@@ -151,9 +151,11 @@ public class MainActivity extends AppCompatActivity {
             if (position == 0) {
                 return ContactFragment.newInstance(position+1);
             }
-
             if (position == 1) {
                 return ImageList.newInstance();
+            }
+            if (position == 2) {
+                return ColorGame.newInstance();
             }
             return PlaceholderFragment.newInstance(position+1);
         }

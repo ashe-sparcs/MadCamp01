@@ -3,14 +3,15 @@
     android:layout_height="fill_parent"
     android:layout_width="fill_parent"
     xmlns:android="http://schemas.android.com/apk/res/android">
+
     <GridView
         android:layout_height="fill_parent"
         android:layout_width="fill_parent"
         android:gravity="center"
         android:stretchMode="columnWidth"
-        android:columnWidth="96dp"
-        android:horizontalSpacing="5dp"
-        android:verticalSpacing="5dp"
+        android:columnWidth="115dp"
+        android:horizontalSpacing="-53dp"
+        android:verticalSpacing="2dp"
         android:numColumns="auto_fit"
         android:id="@+id/ImgGridView"/>
 </LinearLayout>
