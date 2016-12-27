@@ -51,10 +51,8 @@ public class ImageList extends Fragment {
 
         /*GridView gv = (GridView)findViewById(R.id.ImgGridView);
         final ImageAdapter ia = new ImageAdapter(getActivity());
-        gv.setAdapter(ia);
-        gv.setOnItemClickListener(new OnItemClickListener(){
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-                ia.callImageViewer(position);*/
+        gv.setAdapter(ia);*/
+
 
         return rootView;
     }
@@ -73,6 +71,13 @@ public class ImageList extends Fragment {
             // Android version is lesser than 6.0 or the permission is already granted.
             mAdapter.getThumbInfo(mAdapter.thumbsIDList, mAdapter.thumbsDataList);
         }
+
+        gv.setOnItemClickListener(new OnItemClickListener() {
+                                      public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                                          mAdapter.callImageViewer(position);
+                                      }
+                                  });
+
 
 
         /*for(int a=0; a<mListData.length;a++)
@@ -141,12 +146,12 @@ public class ImageList extends Fragment {
             thumbsIDList = new ArrayList<String>();
         }
 
-        /*public final void callImageViewer(int selectedIndex){
-            Intent i = new Intent(mContext, ImagePopup.class);
+        public final void callImageViewer(int selectedIndex){
+            Intent i = new Intent(mContext, FullscreenActivity.class);
             String imgPath = getImageInfo(imgData, geoData, thumbsIDList.get(selectedIndex));
             i.putExtra("filename", imgPath);
             startActivityForResult(i, 1);
-        }*/
+        }
 
         public boolean deleteSelected(int sIndex) {
             return true;
@@ -246,8 +251,6 @@ public class ImageList extends Fragment {
             imageCursor.close();
             return imageDataPath;
         }
-
-
     }
 }
 
