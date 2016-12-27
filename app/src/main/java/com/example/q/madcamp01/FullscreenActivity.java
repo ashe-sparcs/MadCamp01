@@ -1,23 +1,35 @@
 package com.example.q.madcamp01;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 public class FullscreenActivity extends AppCompatActivity {
+
+    ArrayList<String> thumbsIDList;
+    int selectedIndex;
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -88,6 +100,46 @@ public class FullscreenActivity extends AppCompatActivity {
         }
     };
 
+    private String getImageInfo(String ImageData, String Location, String thumbID) {
+        String imageDataPath = null;
+        String[] proj = {MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DATA,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.SIZE};
+        Cursor imageCursor = FullscreenActivity.this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                proj, "_ID='" + thumbID + "'", null, null);
+
+        if (imageCursor != null && imageCursor.moveToFirst()) {
+            if (imageCursor.getCount() > 0) {
+                int imgData = imageCursor.getColumnIndex(MediaStore.Images.Media.DATA);
+                imageDataPath = imageCursor.getString(imgData);
+            }
+        }
+        imageCursor.close();
+        return imageDataPath;
+    }
+
+    public final void callNextImageViewer(){
+        // 마지막 사진일 때 예외처리
+        Intent i = new Intent(FullscreenActivity.this, FullscreenActivity.class);
+        String imgPath = getImageInfo(null, null, thumbsIDList.get(selectedIndex-1));
+        i.putExtra("filename", imgPath);
+        i.putStringArrayListExtra("thumbsIDList", thumbsIDList);
+        i.putExtra("selectedIndex", selectedIndex-1);
+        startActivityForResult(i, 1);
+        finish();
+    }
+    public final void callPreviousImageViewer(){
+        // 첫번째 사진일 떄 예외처리
+        Intent i = new Intent(FullscreenActivity.this, FullscreenActivity.class);
+        String imgPath = getImageInfo(null, null, thumbsIDList.get(selectedIndex+1));
+        i.putExtra("filename", imgPath);
+        i.putStringArrayListExtra("thumbsIDList", thumbsIDList);
+        i.putExtra("selectedIndex", selectedIndex+1);
+        startActivityForResult(i, 1);
+        finish();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,12 +167,24 @@ public class FullscreenActivity extends AppCompatActivity {
         Intent i = getIntent();
         Bundle extras = i.getExtras();
         String imgPath = extras.getString("filename");
+        thumbsIDList = extras.getStringArrayList("thumbsIDList");
+        selectedIndex = extras.getInt("selectedIndex");
+
 
         BitmapFactory.Options bfo = new BitmapFactory.Options();
         bfo.inSampleSize = 2;
         ImageView iv = (ImageView)findViewById(R.id.fullscreen_content);
         Bitmap bm = BitmapFactory.decodeFile(imgPath, bfo);
         iv.setImageBitmap(bm);
+        iv.setOnTouchListener(new OnSwipeTouchListener(FullscreenActivity.this) {
+            public void onSwipeRight() {
+                callNextImageViewer();
+            }
+            public void onSwipeLeft() {
+                callPreviousImageViewer();
+            }
+
+        });
     }
 
     /*@Override

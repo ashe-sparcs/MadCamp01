@@ -148,8 +148,11 @@ public class ImageList extends Fragment {
 
         public final void callImageViewer(int selectedIndex){
             Intent i = new Intent(mContext, FullscreenActivity.class);
-            String imgPath = getImageInfo(imgData, geoData, thumbsIDList.get(selectedIndex));
+            //String imgPath = getImageInfo(imgData, geoData, thumbsIDList.get(selectedIndex));
+            String imgPath = getImageInfo(null, null, thumbsIDList.get(selectedIndex));
             i.putExtra("filename", imgPath);
+            i.putStringArrayListExtra("thumbsIDList", thumbsIDList);
+            i.putExtra("selectedIndex", selectedIndex);
             startActivityForResult(i, 1);
         }
 
