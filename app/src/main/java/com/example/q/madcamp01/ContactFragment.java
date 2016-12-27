@@ -116,7 +116,7 @@ public class ContactFragment extends Fragment {
                 // Permission is granted
                 GetUserContactsList();
             } else {
-                Toast.makeText(getActivity(), "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
         }
     }

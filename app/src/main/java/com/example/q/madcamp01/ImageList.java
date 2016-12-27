@@ -46,7 +46,7 @@ public class ImageList extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.tab_2, container, false);
-        GridView gv = (GridView) rootView.findViewById(R.id.gridView);
+        gv = (GridView) rootView.findViewById(R.id.ImgGridView);
 
 
         /*GridView gv = (GridView)findViewById(R.id.ImgGridView);
@@ -63,9 +63,16 @@ public class ImageList extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-
         mAdapter = new ImageList.ImageAdapter(getActivity());
         gv.setAdapter(mAdapter);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        } else {
+            // Android version is lesser than 6.0 or the permission is already granted.
+            mAdapter.getThumbInfo(mAdapter.thumbsIDList, mAdapter.thumbsDataList);
+        }
 
 
         /*for(int a=0; a<mListData.length;a++)
@@ -103,6 +110,18 @@ public class ImageList extends Fragment {
                         }
                 );*/
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission is granted
+                mAdapter.getThumbInfo(mAdapter.thumbsIDList, mAdapter.thumbsDataList);
+            } else {
+                Toast.makeText(getActivity(), "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
 
     /**
@@ -120,7 +139,6 @@ public class ImageList extends Fragment {
             mContext = c;
             thumbsDataList = new ArrayList<String>();
             thumbsIDList = new ArrayList<String>();
-            getThumbInfo(thumbsIDList, thumbsDataList);
         }
 
         /*public final void callImageViewer(int selectedIndex){
@@ -150,7 +168,7 @@ public class ImageList extends Fragment {
             ImageView imageView;
             if (convertView == null) {
                 imageView = new ImageView(mContext);
-                imageView.setLayoutParams(new GridView.LayoutParams(95, 95));
+                imageView.setLayoutParams(new GridView.LayoutParams(300, 300));
                 imageView.setAdjustViewBounds(false);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setPadding(2, 2, 2, 2);
@@ -160,7 +178,7 @@ public class ImageList extends Fragment {
             BitmapFactory.Options bo = new BitmapFactory.Options();
             bo.inSampleSize = 8;
             Bitmap bmp = BitmapFactory.decodeFile(thumbsDataList.get(position), bo);
-            Bitmap resized = Bitmap.createScaledBitmap(bmp, 95, 95, true);
+            Bitmap resized = Bitmap.createScaledBitmap(bmp, 300, 300, true);
             imageView.setImageBitmap(resized);
 
             return imageView;
