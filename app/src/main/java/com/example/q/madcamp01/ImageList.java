@@ -78,8 +78,8 @@ public class ImageList extends Fragment {
         super.onActivityCreated(savedInstanceState);
     }
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
@@ -244,7 +244,6 @@ public class ImageList extends Fragment {
             data_list = new ArrayList<>();
             id_list = new ArrayList<>();
             nail_list = new ArrayList<>();
-            swipeContainer = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipeContainer);
             gv = (GridView) getActivity().findViewById(R.id.ImgGridView);
             gv.setPadding(0,0,0,getSoftButtonsBarHeight());
             m_adapter = new ImageAdapter(getActivity(), data_list, id_list, nail_list);
@@ -303,24 +302,11 @@ public class ImageList extends Fragment {
                     m_adapter.callImageViewer(position);
                 }
             });
-            swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    // Your code to refresh the list here.
-                    // Make sure you call swipeContainer.setRefreshing(false)
-                    // once the network request has completed successfully.
-                    Log.d("onrefresh", "start");
-                    new GetImageTask().execute(true);
-                    Log.d("onrefresh", "end?");
-                    swipeContainer.setRefreshing(false);
-                }
-            });
+
+            }
             // Configure the refreshing colors
-            swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
-                    android.R.color.holo_green_light,
-                    android.R.color.holo_orange_light,
-                    android.R.color.holo_red_light);
+
         }
     }
-}
+
 

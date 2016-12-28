@@ -7,15 +7,17 @@
     <TextView
         android:id="@+id/textView1"
         android:text="TextView"
-        android:textSize="30dp"
-        android:layout_width="wrap_content"
+        android:textSize="24dp"
+        android:paddingLeft="10dp"
+        android:layout_width="90dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.57" />
+        android:layout_weight="0.26" />
 
     <TextView
         android:id="@+id/textView2"
         android:text="TextView"
-        android:textSize="15dp"
+        android:textSize="12dp"
+        android:paddingLeft="5dp"
         android:layout_width="93dp"
         android:layout_height="wrap_content"
          />
@@ -23,13 +25,16 @@
     <Button
         android:text="Call"
         android:id="@+id/button1"
-        android:layout_width="61dp"
+        android:paddingLeft="5dp"
+        android:layout_width="45dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.43"></Button>
 
     <Button
         android:text="Message"
         android:id="@+id/button2"
+        android:paddingLeft="20dp"
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"></Button>
 

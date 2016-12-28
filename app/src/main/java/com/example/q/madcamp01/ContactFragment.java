@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -44,7 +43,7 @@ public class ContactFragment extends Fragment {
      * fragment.
      */
     ListViewAdapter mAdapter;
-    SwipeRefreshLayout swipeContainer;
+
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -74,7 +73,6 @@ public class ContactFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        swipeContainer = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipeContainer);
         return rootView;
     }
 
@@ -99,13 +97,8 @@ public class ContactFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         context = getActivity();
-    }
-    @Override
-    public void onStart() {
-        super.onStart();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS
-                    //,Manifest.permission.CALL_PHONE,Manifest.permission.SEND_SMS
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS,
             },0);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
@@ -113,21 +106,13 @@ public class ContactFragment extends Fragment {
             GetContactTask task = new GetContactTask();
             task.execute((Void[])null);
         }
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                new GetContactTask().execute((Void[])null);
-                swipeContainer.setRefreshing(false);
-            }
-        });
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+
         // Configure the refreshing colors
-        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light,
-                android.R.color.holo_red_light);
+
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -258,7 +243,6 @@ public class ContactFragment extends Fragment {
     public class GetContactTask extends AsyncTask<Void, String, Void> {
 
         ListView lv;
-        SwipeRefreshLayout swipeContainer;
         ArrayList<ListData> ld_list;
         ListViewAdapter m_adapter;
 
