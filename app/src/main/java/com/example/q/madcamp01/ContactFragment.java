@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -67,6 +68,100 @@ public class ContactFragment extends Fragment {
         return rootView;
     }
 
+    private class GetContactTask extends AsyncTask<ArrayList<ListData>, String, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<ListData> mld) {
+            // 전달된 URL 사용 작업
+            if (!mld.isEmpty()) {
+                mld.clear();
+            }
+            String[] arrProjection = {
+                    ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.DISPLAY_NAME,
+            };
+            String[] arrPhoneProjection = {
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+            };
+            String[] arrEmailProjection = {
+                    ContactsContract.CommonDataKinds.Email.DATA
+            };
+            // get user list
+            Cursor clsCursor = getActivity().getContentResolver().query(
+                    ContactsContract.Contacts.CONTENT_URI, arrProjection,
+                    ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1",
+                    null, null
+            );
+
+            while (clsCursor.moveToNext()) {
+                String strContactId = clsCursor.getString(0);
+                Log.d("Unity", "이름 : " + clsCursor.getString(1));
+
+
+
+                // phone number
+                Cursor clsPhoneCursor = getActivity().getContentResolver().query (
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        arrPhoneProjection,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + strContactId,
+                        null, null
+                );
+
+                while( clsPhoneCursor.moveToNext() ) {
+                    // add name, number
+                    publishProgress(clsCursor.getString(1), clsPhoneCursor.getString(0));
+                }
+                clsPhoneCursor.close();
+
+            }
+            clsCursor.close();
+        }
+
+        @Override
+        protected void onProgressUpdate(String... stringArgs) {
+            // 파일 다운로드 퍼센티지 표시 작업
+            mAdapter.addItem(stringArgs[0], stringArgs[1]);
+            mAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            // doInBackground 에서 받아온 total 값 사용 장소
+            lv.setOnItemClickListener
+                    (
+                            new AdapterView.OnItemClickListener()
+                            {
+                                public void onItemClick(AdapterView parent, View view, int position, long id)
+                                {
+                                    String str = mAdapter.mListData.get(position).name;
+                                    String a = str + " 선택";
+                                    Toast.makeText(getActivity(), a, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                    );
+            swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    // Your code to refresh the list here.
+                    // Make sure you call swipeContainer.setRefreshing(false)
+                    // once the network request has completed successfully.
+                    mAdapter.GetUserContactsList();
+                    lv.setAdapter(mAdapter);
+                    swipeContainer.setRefreshing(false);
+                }
+            });
+            // Configure the refreshing colors
+            swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                    android.R.color.holo_green_light,
+                    android.R.color.holo_orange_light,
+                    android.R.color.holo_red_light);
+        }
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -91,36 +186,9 @@ public class ContactFragment extends Fragment {
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             // Android version is lesser than 6.0 or the permission is already granted.
-            mAdapter.GetUserContactsList();
+            GetContactTask task = new GetContactTask();
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mAdapter.mListData);
         }
-        lv.setOnItemClickListener
-            (
-                    new AdapterView.OnItemClickListener()
-                    {
-                        public void onItemClick(AdapterView parent, View view, int position, long id)
-                        {
-                            String str = mAdapter.mListData.get(position).name;
-                            String a = str + " 선택";
-                            Toast.makeText(getActivity(), a, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-            );
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                mAdapter.GetUserContactsList();
-                lv.setAdapter(mAdapter);
-                swipeContainer.setRefreshing(false);
-            }
-        });
-        // Configure the refreshing colors
-        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light,
-                android.R.color.holo_red_light);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -128,7 +196,8 @@ public class ContactFragment extends Fragment {
         if (requestCode == 0) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission is granted
-                mAdapter.GetUserContactsList();
+                GetContactTask task = new GetContactTask();
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mAdapter.mListData);
             } else {
                 Toast.makeText(getActivity(), "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
@@ -142,7 +211,7 @@ public class ContactFragment extends Fragment {
     }
     private class ListViewAdapter extends BaseAdapter {
         private Context mContext = null;
-        private ArrayList<ListData> mListData = new ArrayList<ListData>();
+        private ArrayList<ListData> mListData = new ArrayList<>();
 
         public ListViewAdapter(Context mContext) {
             super();
@@ -199,47 +268,8 @@ public class ContactFragment extends Fragment {
             return convertView;
         }
         public void GetUserContactsList() {
-            if (!mListData.isEmpty()) {
-                mListData.clear();
-            }
-            String[] arrProjection = {
-                    ContactsContract.Contacts._ID,
-                    ContactsContract.Contacts.DISPLAY_NAME,
-            };
-            String[] arrPhoneProjection = {
-                    ContactsContract.CommonDataKinds.Phone.NUMBER
-            };
-            String[] arrEmailProjection = {
-                    ContactsContract.CommonDataKinds.Email.DATA
-            };
-            // get user list
-            Cursor clsCursor = getActivity().getContentResolver().query(
-                    ContactsContract.Contacts.CONTENT_URI, arrProjection,
-                    ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1",
-                    null, null
-            );
-
-            while (clsCursor.moveToNext()) {
-                String strContactId = clsCursor.getString(0);
-                Log.d("Unity", "이름 : " + clsCursor.getString(1));
-
-
-
-                // phone number
-                Cursor clsPhoneCursor = getActivity().getContentResolver().query (
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        arrPhoneProjection,
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + strContactId,
-                        null, null
-                );
-
-                while( clsPhoneCursor.moveToNext() ) {
-                    mAdapter.addItem(clsCursor.getString(1), clsPhoneCursor.getString(0));
-                }
-                clsPhoneCursor.close();
-
-            }
-            clsCursor.close();
+            GetContactTask task = new GetContactTask();
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mListData);
         }
     }
 }
