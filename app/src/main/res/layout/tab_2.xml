@@ -12,6 +12,6 @@
         android:columnWidth="115dp"
         android:horizontalSpacing="-53dp"
         android:verticalSpacing="2dp"
-        android:numColumns="auto_fit"
+        android:numColumns="4"
         android:id="@+id/ImgGridView"/>
 </LinearLayout>
