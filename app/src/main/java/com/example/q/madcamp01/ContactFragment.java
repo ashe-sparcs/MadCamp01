@@ -1,15 +1,19 @@
 package com.example.q.madcamp01;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -182,7 +187,9 @@ public class ContactFragment extends Fragment {
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 0);
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS
+                    //,Manifest.permission.CALL_PHONE,Manifest.permission.SEND_SMS
+                     },0);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             // Android version is lesser than 6.0 or the permission is already granted.
@@ -203,11 +210,16 @@ public class ContactFragment extends Fragment {
             }
         }
     }
+
+
+
     private class ViewHolder
     {
         public TextView name;
-
         public TextView number;
+        public Button callButton;
+        public Button msgButton;
+
     }
     private class ListViewAdapter extends BaseAdapter {
         private Context mContext = null;
@@ -243,7 +255,7 @@ public class ContactFragment extends Fragment {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             ViewHolder holder;
             if (convertView == null) {
                 holder = new ViewHolder();
@@ -264,6 +276,46 @@ public class ContactFragment extends Fragment {
 
             holder.name.setText(mData.name);
             holder.number.setText(mData.number);
+
+
+
+            Button callButton = (Button) convertView.findViewById(R.id.button1);
+            Button msgButton = (Button) convertView.findViewById(R.id.button2);
+
+            holder.callButton.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View arg0) {
+                    // Send single item click data to SingleItemView Class
+                    String phoneNumber = mListData.get(position).number;
+                    if (!phoneNumber.equals("none")) {
+                        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneNumber));
+                        getActivity().startActivity(intent);
+                        //try startActivityForResult
+                    }
+                }
+            });
+
+            holder.msgButton.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View arg0) {
+                    // Send single item click data to SingleItemView Class
+                    String phoneNumber = mListData.get(position).number;
+                    if (!phoneNumber.equals("none")) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+
+                        intent.setData(Uri.parse("smsto:"));
+                        intent.setType("vnd.android-dir/mms-sms");
+                        intent.putExtra("address", phoneNumber);
+                        try {
+                            mContext.startActivity(intent);
+                        } catch(android.content.ActivityNotFoundException e) {
+                            Toast.makeText(mContext, "문자 메시지 전송 실패", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
 
             return convertView;
         }
