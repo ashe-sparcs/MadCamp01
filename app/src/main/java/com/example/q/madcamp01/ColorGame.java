@@ -21,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -32,7 +33,12 @@ import java.util.ArrayList;
 public class ColorGame extends Fragment {
     public Context mContext;
     GridView gv;
+    TextView trial;
     ColorGame.ImageAdapter mAdapter;
+    int clickedPosition = -1;
+    int numTrial = 0;
+    private static final int NUM_COLOR = 3;
+    private static final int END_OF_GAME = -2;
 
     public static ColorGame newInstance() {
         ColorGame fragment = new ColorGame();
@@ -46,6 +52,7 @@ public class ColorGame extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.tab_3, container, false);
         gv = (GridView) rootView.findViewById(R.id.board);
+        trial = (TextView) rootView.findViewById(R.id.trial);
 
         return rootView;
     }
@@ -76,24 +83,49 @@ public class ColorGame extends Fragment {
         ImageAdapter(Context c) {
             mContext = c;
             for (int i = 0; i < 16; i++) {
-                colors[i] = (int)(Math.random() * 3);
+                colors[i] = (int)(Math.random() * NUM_COLOR);
             }
         }
 
         public final void callImageViewer(int selectedIndex){
-            if (colors[selectedIndex] == 0) {
-                //colors[selectedIndex]를 1로 바꾸고 이미지뷰를 다음 이미지로 바꿈]
-                colors[selectedIndex]++;
-                gv.setAdapter(mAdapter);
-            } else if (colors[selectedIndex] == 1) {
-                //colors[selectedIndex]를 2로 바꾸고 이미지뷰를 다음 이미지로 바꿈
-                colors[selectedIndex]++;
-                gv.setAdapter(mAdapter);
-            } else if (colors[selectedIndex] == 2) {
-                //colors[selectedIndex]를 0으로 바꾸고 이미지뷰를 맨처음 이미지로 바꿈
-                colors[selectedIndex] = 0;
+            if (selectedIndex == clickedPosition) {
+                Toast.makeText(getActivity(), "같은 셀을 연속해서 클릭할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+            else if (clickedPosition != END_OF_GAME) {
+                // colors[selectedIndex]를 0으로 바꾼다(한바퀴 돌아서 처음 상태로).
+                if (colors[selectedIndex] == NUM_COLOR-1) {
+                    colors[selectedIndex] = 0;
+                }
+                // colors[selectedIndex]를 1 더한다.
+                else {
+                    colors[selectedIndex]++;
+                }
+                clickedPosition = selectedIndex;
+                increaseTrial();
                 gv.setAdapter(mAdapter);
             }
+            if (isFinished()) {
+                // 텍스트뷰로 트라이얼 개수 출력, 리게임 버튼 표시, 더이상 눌러도 변하지 않게끔.
+                Toast.makeText(getActivity(), "끝났음 ㅅㄱ.", Toast.LENGTH_SHORT).show();
+                clickedPosition = END_OF_GAME;
+            }
+        }
+
+        public boolean isFinished() {
+            int temp = -1;
+            for (int i = 0; i < 16; i++) {
+                if (temp == -1) {
+                    temp = colors[i];
+                } else if (temp != colors[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public void increaseTrial() {
+            numTrial++;
+            trial.setText("Trial : "+String.valueOf(numTrial));
         }
 
         public int getCount() {
