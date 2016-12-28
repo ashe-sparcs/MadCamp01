@@ -76,7 +76,10 @@ public class ImageList extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
@@ -230,7 +233,6 @@ public class ImageList extends Fragment {
     public class GetImageTask extends AsyncTask<Boolean, String, Boolean> {
 
         GridView gv;
-        SwipeRefreshLayout swipeContainer;
         ArrayList<String> data_list;
         ArrayList<String> id_list;
         ArrayList<Bitmap> nail_list;
@@ -307,7 +309,10 @@ public class ImageList extends Fragment {
                     // Your code to refresh the list here.
                     // Make sure you call swipeContainer.setRefreshing(false)
                     // once the network request has completed successfully.
+                    Log.d("onrefresh", "start");
                     new GetImageTask().execute(true);
+                    Log.d("onrefresh", "end?");
+                    swipeContainer.setRefreshing(false);
                 }
             });
             // Configure the refreshing colors
@@ -315,9 +320,6 @@ public class ImageList extends Fragment {
                     android.R.color.holo_green_light,
                     android.R.color.holo_orange_light,
                     android.R.color.holo_red_light);
-            if (isRefresh) {
-                swipeContainer.setRefreshing(false);
-            }
         }
     }
 }

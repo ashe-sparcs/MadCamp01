@@ -32,6 +32,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.q.madcamp01.R.id.swipeContainer;
+
 /**
  * Created by q on 2016-12-26.
  */
@@ -42,6 +44,7 @@ public class ContactFragment extends Fragment {
      * fragment.
      */
     ListViewAdapter mAdapter;
+    SwipeRefreshLayout swipeContainer;
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -71,6 +74,7 @@ public class ContactFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        swipeContainer = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipeContainer);
         return rootView;
     }
 
@@ -95,17 +99,35 @@ public class ContactFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         context = getActivity();
-
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS
                     //,Manifest.permission.CALL_PHONE,Manifest.permission.SEND_SMS
-                     },0);
+            },0);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             // Android version is lesser than 6.0 or the permission is already granted.
             GetContactTask task = new GetContactTask();
             task.execute((Void[])null);
         }
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                new GetContactTask().execute((Void[])null);
+                swipeContainer.setRefreshing(false);
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -244,7 +266,6 @@ public class ContactFragment extends Fragment {
         protected void onPreExecute() {
             super.onPreExecute();
             ld_list = new ArrayList<>();
-            swipeContainer = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipeContainer);
             lv = (ListView) getActivity().findViewById(R.id.listView);
             lv.setPadding(0,0,0,getSoftButtonsBarHeight());
             m_adapter = new ListViewAdapter(getActivity(), ld_list);
@@ -310,21 +331,6 @@ public class ContactFragment extends Fragment {
                                 }
                             }
                     );
-            swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    // Your code to refresh the list here.
-                    // Make sure you call swipeContainer.setRefreshing(false)
-                    // once the network request has completed successfully.
-                    new GetContactTask().execute((Void[])null);
-                    swipeContainer.setRefreshing(false);
-                }
-            });
-            // Configure the refreshing colors
-            swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
-                    android.R.color.holo_green_light,
-                    android.R.color.holo_orange_light,
-                    android.R.color.holo_red_light);
         }
     }
 }
