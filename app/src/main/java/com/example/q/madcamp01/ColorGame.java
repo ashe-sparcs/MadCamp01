@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ public class ColorGame extends Fragment {
     public Context mContext;
     GridView gv;
     TextView trial;
+    Button restart;
     ColorGame.ImageAdapter mAdapter;
     int clickedPosition = -1;
     int numTrial = 0;
@@ -53,6 +55,7 @@ public class ColorGame extends Fragment {
         View rootView = inflater.inflate(R.layout.tab_3, container, false);
         gv = (GridView) rootView.findViewById(R.id.board);
         trial = (TextView) rootView.findViewById(R.id.trial);
+        restart = (Button) rootView.findViewById(R.id.restart);
 
         return rootView;
     }
@@ -67,6 +70,23 @@ public class ColorGame extends Fragment {
         gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 mAdapter.callImageViewer(position);
+            }
+        });
+
+        restart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clickedPosition = -1;
+                numTrial = 0;
+                mAdapter = new ColorGame.ImageAdapter(getActivity());
+                gv.setAdapter(mAdapter);
+
+                gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                        mAdapter.callImageViewer(position);
+                    }
+                });
+                trial.setText("Trial : 0");
             }
         });
     }

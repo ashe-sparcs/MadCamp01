@@ -16,4 +16,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Trial : 0"/>
+    <Button
+        android:id="@+id/restart"
+        android:text="Restart!"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>
