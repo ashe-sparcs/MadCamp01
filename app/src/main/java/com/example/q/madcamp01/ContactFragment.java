@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,6 +34,7 @@ public class ContactFragment extends Fragment {
      */
     ListView lv;
     ListViewAdapter mAdapter;
+    private SwipeRefreshLayout swipeContainer;
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -56,6 +58,7 @@ public class ContactFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         lv = (ListView) rootView.findViewById(R.id.listView);
+        swipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
 
 
         //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));//
@@ -88,13 +91,8 @@ public class ContactFragment extends Fragment {
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             // Android version is lesser than 6.0 or the permission is already granted.
-            GetUserContactsList();
+            mAdapter.GetUserContactsList();
         }
-
-
-
-
-
         lv.setOnItemClickListener
             (
                     new AdapterView.OnItemClickListener()
@@ -107,6 +105,22 @@ public class ContactFragment extends Fragment {
                         }
                     }
             );
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                mAdapter.GetUserContactsList();
+                lv.setAdapter(mAdapter);
+                swipeContainer.setRefreshing(false);
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -114,7 +128,7 @@ public class ContactFragment extends Fragment {
         if (requestCode == 0) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission is granted
-                GetUserContactsList();
+                mAdapter.GetUserContactsList();
             } else {
                 Toast.makeText(getActivity(), "Until you grant the permission, we cannot display the names", Toast.LENGTH_SHORT).show();
             }
@@ -184,52 +198,49 @@ public class ContactFragment extends Fragment {
 
             return convertView;
         }
-    }
-
-
-    public void GetUserContactsList() {
-
-        String[] arrProjection = {
-                ContactsContract.Contacts._ID,
-                ContactsContract.Contacts.DISPLAY_NAME,
-        };
-        String[] arrPhoneProjection = {
-                ContactsContract.CommonDataKinds.Phone.NUMBER
-        };
-        String[] arrEmailProjection = {
-                ContactsContract.CommonDataKinds.Email.DATA
-        };
-        // get user list
-        Cursor clsCursor = getActivity().getContentResolver().query(
-                ContactsContract.Contacts.CONTENT_URI, arrProjection,
-                ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1",
-                null, null
-        );
-
-        while (clsCursor.moveToNext()) {
-            String strContactId = clsCursor.getString(0);
-            Log.d("Unity", "이름 : " + clsCursor.getString(1));
-
-
-
-            // phone number
-            Cursor clsPhoneCursor = getActivity().getContentResolver().query (
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                arrPhoneProjection,
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + strContactId,
-                null, null
+        public void GetUserContactsList() {
+            if (!mListData.isEmpty()) {
+                mListData.clear();
+            }
+            String[] arrProjection = {
+                    ContactsContract.Contacts._ID,
+                    ContactsContract.Contacts.DISPLAY_NAME,
+            };
+            String[] arrPhoneProjection = {
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+            };
+            String[] arrEmailProjection = {
+                    ContactsContract.CommonDataKinds.Email.DATA
+            };
+            // get user list
+            Cursor clsCursor = getActivity().getContentResolver().query(
+                    ContactsContract.Contacts.CONTENT_URI, arrProjection,
+                    ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1",
+                    null, null
             );
-            
-            while( clsPhoneCursor.moveToNext() )
-            {
-            Log.d("Unity", "폰번호 : " + clsPhoneCursor.getString( 0 ));
-                mAdapter.addItem(clsCursor.getString(1), clsPhoneCursor.getString(0));
+
+            while (clsCursor.moveToNext()) {
+                String strContactId = clsCursor.getString(0);
+                Log.d("Unity", "이름 : " + clsCursor.getString(1));
+
+
+
+                // phone number
+                Cursor clsPhoneCursor = getActivity().getContentResolver().query (
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        arrPhoneProjection,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + strContactId,
+                        null, null
+                );
+
+                while( clsPhoneCursor.moveToNext() ) {
+                    mAdapter.addItem(clsCursor.getString(1), clsPhoneCursor.getString(0));
+                }
+                clsPhoneCursor.close();
 
             }
-            clsPhoneCursor.close();
-
+            clsCursor.close();
         }
-        clsCursor.close();
     }
 }
 

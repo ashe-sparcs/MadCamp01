@@ -17,6 +17,7 @@ package com.example.q.madcamp01;
         import android.net.Uri;
         import android.os.Bundle;
         import android.provider.MediaStore;
+        import android.support.v4.widget.SwipeRefreshLayout;
         import android.util.Log;
         import android.view.LayoutInflater;
         import android.view.View;
@@ -34,6 +35,7 @@ public class ImageList extends Fragment {
     public Context mContext;
     GridView gv;
     ImageAdapter mAdapter;
+    private SwipeRefreshLayout swipeContainer;
 
     public static ImageList newInstance() {
         ImageList fragment = new ImageList();
@@ -47,13 +49,7 @@ public class ImageList extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.tab_2, container, false);
         gv = (GridView) rootView.findViewById(R.id.ImgGridView);
-
-
-        /*GridView gv = (GridView)findViewById(R.id.ImgGridView);
-        final ImageAdapter ia = new ImageAdapter(getActivity());
-        gv.setAdapter(ia);*/
-
-
+        swipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
         return rootView;
     }
 
@@ -77,43 +73,22 @@ public class ImageList extends Fragment {
                                           mAdapter.callImageViewer(position);
                                       }
                                   });
-
-
-
-        /*for(int a=0; a<mListData.length;a++)
-        {
-            mAdapter.addItem(mListData.getString(a));
-        }
-
-
-        mAdapter.addItem("김재성", "010-2908-8041");
-        Log.d("onactivity created", "hey");*/
-
-
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 0);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        } else {
-            // Android version is lesser than 6.0 or the permission is already granted.
-            GetUserContactsList();
-        }
-
-
-
-
-
-        gv.setOnItemClickListener
-                (
-                        new AdapterView.OnItemClickListener()
-                        {
-                            public void onItemClick(AdapterView parent, View view, int position, long id)
-                            {
-                                String str = mAdapter.mListData.get(position).name;
-                                String a = str + " 선택";
-                                Toast.makeText(getActivity(), a, Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                );*/
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                mAdapter.getThumbInfo(mAdapter.thumbsIDList, mAdapter.thumbsDataList);
+                gv.setAdapter(mAdapter);
+                swipeContainer.setRefreshing(false);
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -197,6 +172,12 @@ public class ImageList extends Fragment {
 
 
         private void getThumbInfo(ArrayList<String> thumbsIDs, ArrayList<String> thumbsDatas) {
+            if (!thumbsIDs.isEmpty()) {
+                thumbsIDs.clear();
+            }
+            if (!thumbsDatas.isEmpty()) {
+                thumbsDatas.clear();
+            }
             String[] proj = {MediaStore.Images.Media._ID,
                     MediaStore.Images.Media.DATA,
                     MediaStore.Images.Media.DISPLAY_NAME,
@@ -204,7 +185,6 @@ public class ImageList extends Fragment {
 
             Cursor imageCursor = mContext.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     proj, null, null, null);
-            Log.d("ID" , "added");
             if (imageCursor != null && imageCursor.moveToFirst()) {
                 String title;
                 String thumbsID;
@@ -229,9 +209,7 @@ public class ImageList extends Fragment {
                         thumbsDatas.add(thumbsData);
                     }
                 } while (imageCursor.moveToNext());
-                Log.d("ID는" , thumbsID);
             }
-
             imageCursor.close();
             return;
         }
